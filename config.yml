@@ -1,0 +1,8 @@
+events:
+  logwatch_aws_mail:
+    enabled: true
+    type: AwsSesEmailHook
+    sender: "{{ sender_address }}"
+    sender_name: "{{ sender_name }}"
+    recipients:
+      - "{{ recipient_address}}"

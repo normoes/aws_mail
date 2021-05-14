@@ -1,0 +1,4 @@
+# Changes here will be overwritten by copier.
+_commit: v0.0.1
+_src_path: git@github.com:normoes/python_style_general.git
+project_name: aws_mail
