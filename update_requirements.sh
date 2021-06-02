@@ -20,7 +20,7 @@ if [ -z "${DOCKER_ENV+x}" ]; then
     #  ./update_requirements.txt -s ./venv/bin/
     #  or
     #  ./update_requirements.txt -s ~/.local/bin/
-    # or use the approach described in 'README.md'.
+    #  or simply use the host's installation of 'pip-compile`'.
     system=""
     while getopts ":s:" opt; do
         case $opt in
@@ -31,7 +31,7 @@ if [ -z "${DOCKER_ENV+x}" ]; then
     if [ -n "$system" ]; then
         interpreter="$system"
     else
-        interpreter="./venv/bin/"
+        interpreter=""
     fi
 else
     # If this is the docker environment,

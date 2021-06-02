@@ -1,7 +1,6 @@
 import sys
 import os
 import fileinput
-from pathlib import Path
 import logging
 import argparse
 import time
@@ -12,7 +11,7 @@ from eventhooks import event_helper
 
 logger_formatter = logging.Formatter(
     "%(asctime)s - %(name)s [%(levelname)s] - %(pathname)s [line: %(lineno)s]: method: %(funcName)s - %(message)s",
-    datefmt = "%Y-%m-%d %H:%M:%S %Z"
+    datefmt="%Y-%m-%d %H:%M:%S %Z",
 )
 logger_formatter.converter = time.gmtime
 
@@ -35,7 +34,7 @@ def load_config(file_name):
     try:
         if os.path.exists(file_name):
             with open(os.path.realpath(file_name), "r") as file_handler:
-                config = yaml.load(file_handler, Loader=yaml.FullLoader)
+                config = yaml.safe_load(file_handler, Loader=yaml.FullLoader)
     except (yaml.parser.ParserError) as e_yaml_load:
         logger.error(f"Check the format '{file_name}'. Error: '{str(e_yaml_load)}'.")
         raise e_yaml_load
@@ -84,8 +83,8 @@ def main():  # noqa: C901
     if args.debug:
         logger.setLevel(logging.DEBUG)
         # 'SttreamHandler', in order of appearance.
-        console_handler = logger.handlers[0]
-        console_handler.setLevel(logging.DEBUG)
+        stream_handler = logger.handlers[0]
+        stream_handler.setLevel(logging.DEBUG)
 
         logger.debug("Show DEBUG information.")
 
@@ -140,7 +139,9 @@ def main():  # noqa: C901
                     # * logwatch
                     # * unattended-upgrade
                     # * cron
-                    if line_.startswith("###################") and line_.strip("#").strip().lower().startswith("logwatch"):
+                    if line_.startswith("###################") and line_.strip("#").strip().lower().startswith(
+                        "logwatch"
+                    ):
                         found_tool_log = True
                         coming_in = []
                     elif line_.lower().startswith("unattended upgrade result:"):

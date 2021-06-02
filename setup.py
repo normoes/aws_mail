@@ -24,5 +24,5 @@ setup(
         "Natural Language :: English",
         "Programming Language :: Python",
     ],
-    install_requires=["eventhooks[aws]>=0.3","pyyaml>=5.4.1"],
+    install_requires=["eventhooks[aws]>=0.3", "pyyaml>=5.4.1"],
 )

@@ -30,8 +30,12 @@ extension-pkg-whitelist=
 confidence=
 
 # - W1203 f-strings in logging functions.
+# - C0301 line too long
+# - C0415 not a top level import
+# - W0511: TODO, FIXME
 disable=missing-docstring,wrong-import-order,
-        ungrouped-imports,duplicate-code,import-error,W1203
+        ungrouped-imports,duplicate-code,import-error,W1203,
+        C0301,C0415,W0511
 
 [REPORTS]
 

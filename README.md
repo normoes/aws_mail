@@ -174,7 +174,7 @@ sudo ln -s /complete/path/to/venv/bin/aws_mail /usr/sbin/sendmail
 *_Note_*:
 * Recipients for both, `unattended-upgrade`and `cron`, can be configured simliar to `logwatch`:
     - `unattended-upgrade`
-        ``` 
+        ```
             # '/etc/apt/apt.conf.d/50unattended-upgrades'
             Unattended-Upgrade::Mail "email@address.com"
         ```
@@ -230,4 +230,3 @@ copier --vcs-ref=HEAD update
 
 *_Note_*:
 * Local changes need to be committed to make `copier` work.
-

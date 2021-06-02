@@ -1,38 +1,47 @@
+default_language_version:
+    python: python3
 repos:
-- repo: https://github.com/pre-commit/pre-commit-hooks.git
-  rev: v3.4.0
-  hooks:
-    - id: end-of-file-fixer
-    - id: trailing-whitespace
-    - id: check-executables-have-shebangs
-    - id: check-merge-conflict
-    - id: debug-statements
-- repo: https://github.com/psf/black.git
-  rev: 20.8b1
-  hooks:
-    - id: black
-      exclude: |
-        (?x)(
-            ^\.git/|
-            ^cache/|
-            ^\.cache/|
-            ^venv/|
-            ^\.venv/|
-            ^\.local/
-        )
-      language_version: python3
-      ## Just check, do not write back to files.
-      # args: [--check]
-      ## Stage 'manual' requires '--hook-stage manual'.
-      # stages: [commit]
-      stages: [commit]
-- repo: https://gitlab.com/pycqa/flake8
-  rev: 3.7.9
-  hooks:
-    - id: flake8
-      stages: [commit]
-- repo: https://github.com/pycqa/pylint
-  rev: v2.8.2
-  hooks:
-    - id: pylint
-      stages: [commit]
+  - repo: https://github.com/pre-commit/pre-commit-hooks.git
+    rev: v3.4.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-executables-have-shebangs
+      - id: check-merge-conflict
+      - id: debug-statements
+  - repo: https://github.com/psf/black.git
+    rev: 20.8b1
+    hooks:
+      - id: black
+        exclude: |
+          (?x)(
+              ^\.git/|
+              ^cache/|
+              ^\.cache/|
+              ^venv/|
+              ^\.venv/|
+              ^\.local/
+          )
+        language_version: python3
+        ## Just check, do not write back to files.
+        # args: [--check]
+        ## Stage 'manual' requires '--hook-stage manual'.
+        # stages: [commit]
+        stages: [commit]
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.7.9
+    hooks:
+      - id: flake8
+        stages: [commit]
+  - repo: https://github.com/pycqa/pylint
+    rev: v2.8.2
+    hooks:
+      - id: pylint
+        stages: [commit]
+  - repo: https://github.com/Lucas-C/pre-commit-hooks-bandit.git
+    rev: v1.0.4
+    hooks:
+      - id: python-bandit-vulnerability-check
+        args: [--recursive]
+        files: .py$
+        stages: [commit]
