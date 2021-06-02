@@ -34,7 +34,7 @@ def load_config(file_name):
     try:
         if os.path.exists(file_name):
             with open(os.path.realpath(file_name), "r") as file_handler:
-                config = yaml.safe_load(file_handler, Loader=yaml.FullLoader)
+                config = yaml.load(file_handler, Loader=yaml.SafeLoader)
     except (yaml.parser.ParserError) as e_yaml_load:
         logger.error(f"Check the format '{file_name}'. Error: '{str(e_yaml_load)}'.")
         raise e_yaml_load
