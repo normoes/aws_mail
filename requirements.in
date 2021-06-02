@@ -1,2 +1,2 @@
-eventhooks[aws]>=0.2.5,<0.3
-pyyaml==5.4.1
+eventhooks[aws]>=0.3
+pyyaml>=5.4.1

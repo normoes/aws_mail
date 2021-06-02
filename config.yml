@@ -4,5 +4,6 @@ events:
     type: AwsSesEmailHook
     sender: "{{ sender_address }}"
     sender_name: "{{ sender_name }}"
+    region: "{{ aws_region }}"
     recipients:
       - "{{ recipient_address}}"
