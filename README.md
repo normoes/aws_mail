@@ -20,7 +20,8 @@ The tool will recognize certain tools' log structure and will leave everything n
 
 ```
 # Install.
-pip install aws_mail
+python3 -mvenv venv
+venv/bin/pip install aws_mail
 
 # Configuration.
 mkdir /etc/aws_mail/
@@ -29,31 +30,33 @@ touch /etc/aws_mail/config.yml
 # Adapt the configuration options.
 
 # Use.
-echo -e "subject: update\nto: email@address.com\n\nGood day today." | aws_mail --region us-east-1
+echo -e "subject: update\nto: email@address.com\n\nGood day today." | venv/bin/aws_mail --region us-east-1
 ```
 
 ## Installation
 
 This tool is available on pypi.
+It is best to install it into a virtual environment:
 ```
-pip install aws_mail
+python3 -m venv venv
+venv/bin/pip install aws_mail
 ```
 
 Instaalled this way you will find an executable called `aws_mail`.
-Its location depends on the way you installed the tool - Make sure the location is in your `PATH` variable.
+Its location depends on the way you installed the tool - I recommend to work with absolute paths when referring to the `aws_mail` location.
 
 
 ## Usage
 
 In general `aws_mail` works like this:
 ```
-    echo "Good day today." | aws_mail --region us-east-1
+    echo "Good day today." | venv/bin/aws_mail --region us-east-1
 ```
 
 ## Configuration
 
 | option | description | default | configuration options |
----------------------------------------------------------
+|--------|-------------|---------|-----------------------|
 | `--config`  | Path to the configuration file. | `/etc/aws_mail/config.yml` | Absolute, relative path and/or symlink. |
 | `--region`  | AWS region to use. | `us-east-1` | Can also be set in the configuration file. |
 | `--default-subject`  | Forces subject to be loaded from the configuration file <\br> Otherwise considers a line starting with `Subject:`. | `False` (not set) | Default value is the name of the event in the configuration file. |
@@ -87,7 +90,7 @@ events:
 If the tool should find a line starting with `subject:` (piped into it), this will be used as email subject.
 ```
     # The subject will be 'Daily logs from server1'.
-    echo -e "subject: Daily logs from server1\nGood day today." | aws_mail
+    echo -e "subject: Daily logs from server1\nGood day today." | venv/bin/aws_mail
 ```
 Otherwise or when forced with `--default-subject`, the event name (key in `config.yml`) is used as email subject.
 ```
@@ -96,14 +99,14 @@ Otherwise or when forced with `--default-subject`, the event name (key in `confi
       example_mail_event_name:
       ...
     # the actual subject will be 'example_mail_event_name':
-    echo -e "subject: Daily logs from server1\nGood day today." | aws_mail --default-subject
+    echo -e "subject: Daily logs from server1\nGood day today." | venv/bin/aws_mail --default-subject
 ```
 
 ### Email recipients
 If the tool should find a line starting with `to:` (piped into it), this will be used as email recipients.
 ```
     # The recipients will be 'email@address.com,another@address.com'.
-    echo -e "to: email@address.com,another@address.com\nGood day today." | aws_mail
+    echo -e "to: email@address.com,another@address.com\nGood day today." | venv/bin/aws_mail
 ```
 Otherwise or when forced with `--default-recipients`, the recipients defined in `config.yml` are used as email recipients.
 ```
@@ -140,7 +143,7 @@ Configure `aws_mail.py` as email client application in the appropriate file (dep
 * `/usr/share/logwatch/default.conf/logwatch.conf` on `AmazonLinux/RHEL/CentOS`.
 ```
 MailTo = <email@address.com>
-mailer = "aws_mail --region us-east-1"
+mailer = "/complete/path/to/venv/bin/aws_mail --region us-east-1"
 ```
 
 *_Note_*:
@@ -148,7 +151,7 @@ mailer = "aws_mail --region us-east-1"
 * `aws_mail.py` ignores unknown cli arguments, the ones usually sent to `sendmail`.
 * If you like to just use the recipients defined within `config.yml`, add the following option to the `mailer`:
 ```
-mailer = "aws_mail --region us-east-1 --default-recipients"
+mailer = "/complete/path/to/venv/bin/aws_mail --region us-east-1 --default-recipients"
 ```
 
 
@@ -161,14 +164,12 @@ Tools like:
 
 I could not find a place to actually configure the `mailer` client, so the only option left is to symlink `/usr/bin/sendmail` to `aws_mail`:
 ```
-# Get actual path to 'aws_mail' binary.
-command -V aws_mail
 # Create symlink, remove existing file if necessary.
-sudo ln -s $(command -V aws_mail) /usr/sbin/sendmail
+sudo ln -s /complete/path/to/venv/bin/aws_mail /usr/sbin/sendmail
 ```
 
 *_Note_*:
-* `aws_mail.py` ignores unknown cli arguments, the ones usually sent to `sendmail`.
+* `aws_mail` ignores unknown cli arguments, the ones usually sent to `sendmail`.
 
 *_Note_*:
 * Recipients for both, `unattended-upgrade`and `cron`, can be configured simliar to `logwatch`:

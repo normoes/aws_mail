@@ -23,6 +23,7 @@ console_handler.setLevel(logging.ERROR)
 logger = logging.getLogger("AwsMail")
 logger.setLevel(logging.ERROR)
 logger.addHandler(console_handler)
+logger.propagate = False
 
 event_logger = logging.getLogger("EventHooks")
 logger.setLevel(logging.ERROR)
@@ -79,6 +80,15 @@ def main():  # noqa: C901
     )
 
     args, unknown = parser.parse_known_args()
+
+    if args.debug:
+        logger.setLevel(logging.DEBUG)
+        # 'SttreamHandler', in order of appearance.
+        console_handler = logger.handlers[0]
+        console_handler.setLevel(logging.DEBUG)
+
+        logger.debug("Show DEBUG information.")
+
     if unknown and args.debug:
         logger.debug(f"Unprocessed arguments: '{unknown}'.")
 
