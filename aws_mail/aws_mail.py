@@ -27,7 +27,7 @@ logger.addHandler(console_handler)
 logger.propagate = False
 
 event_logger = logging.getLogger("EventHooks")
-logger.setLevel(logging.ERROR)
+event_logger.setLevel(logging.ERROR)
 event_logger.addHandler(console_handler)
 
 
