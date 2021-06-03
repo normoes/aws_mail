@@ -1,7 +1,9 @@
 # Changelog of aws_mail.
 
-
 ## 2021-06-03
+* Add `--version` to output the current version.
+
+## 2021-06-02
 * Initial release.
 * Supports general mail format in incoming data:
 ```

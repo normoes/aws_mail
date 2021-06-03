@@ -8,6 +8,8 @@ import time
 import yaml
 from eventhooks import event_helper
 
+from ._version import __version__
+
 
 logger_formatter = logging.Formatter(
     "%(asctime)s - %(name)s [%(levelname)s] - %(pathname)s [line: %(lineno)s]: method: %(funcName)s - %(message)s",
@@ -46,6 +48,12 @@ def main():  # noqa: C901
         description="AWS mail client.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         allow_abbrev=False,
+    )
+
+    parser.add_argument(
+        "--version",
+        action="version",
+        version="%(prog)s {version}".format(version=__version__),
     )
 
     parser.add_argument(
