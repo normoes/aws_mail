@@ -1,3 +1,4 @@
+log_level: "ERROR"
 events:
   logwatch_aws_mail:
     enabled: true

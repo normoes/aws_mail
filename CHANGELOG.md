@@ -1,5 +1,10 @@
 # Changelog of aws_mail.
 
+## 2021-06-07
+* Log into `/var/log/aws_log/aws_log.log`.
+* Allow to set log level.
+
+
 ## 2021-06-03
 * Add `--version` to output the current version.
 

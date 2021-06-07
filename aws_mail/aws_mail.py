@@ -2,6 +2,8 @@ import sys
 import os
 import fileinput
 import logging
+from logging.handlers import TimedRotatingFileHandler
+import syslog
 import argparse
 import time
 
@@ -11,6 +13,11 @@ from eventhooks import event_helper
 from ._version import __version__
 
 
+LOG_LEVEL_DEFAULT = logging.ERROR
+LOG_LEVELS_ = [logging.CRITICAL, logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG]
+LOG_LEVELS = {logging.getLevelName(level): level for level in LOG_LEVELS_}
+LOG_PATH_DEFAULT = "/var/log/aws_mail"
+
 logger_formatter = logging.Formatter(
     "%(asctime)s - %(name)s [%(levelname)s] - %(pathname)s [line: %(lineno)s]: method: %(funcName)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S %Z",
@@ -19,16 +26,12 @@ logger_formatter.converter = time.gmtime
 
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setFormatter(logger_formatter)
-console_handler.setLevel(logging.ERROR)
+console_handler.setLevel(LOG_LEVEL_DEFAULT)
 
 logger = logging.getLogger("AwsMail")
-logger.setLevel(logging.ERROR)
+logger.setLevel(LOG_LEVEL_DEFAULT)
 logger.addHandler(console_handler)
 logger.propagate = False
-
-event_logger = logging.getLogger("EventHooks")
-event_logger.setLevel(logging.ERROR)
-event_logger.addHandler(console_handler)
 
 
 def load_config(file_name):
@@ -57,14 +60,28 @@ def main():  # noqa: C901
     )
 
     parser.add_argument(
+        "--log-path",
+        default=LOG_PATH_DEFAULT,
+        const=LOG_PATH_DEFAULT,
+        nargs="?",
+        type=str,
+        help="Folder to store logs in.",
+    )
+
+    parser.add_argument(
         "--config",
         default="/etc/aws_mail/config.yml",
+        const="/etc/aws_mail/config.yml",
+        nargs="?",
+        type=str,
         help="Configuration file to use.",
     )
 
     parser.add_argument(
         "--region",
         default="us-east-1",
+        const="us-east-1",
+        nargs="?",
         help="AWS region to use.",
     )
 
@@ -81,35 +98,73 @@ def main():  # noqa: C901
     )
 
     parser.add_argument(
-        "--debug",
-        action="store_true",
-        help="Show debug info.",
+        "--log-level",
+        # No default value.
+        # If not set, use config file value.
+        const=logging.getLevelName(LOG_LEVEL_DEFAULT),
+        nargs="?",
+        choices=LOG_LEVELS,
+        help="Log level to use (default: %(default)s)",
     )
 
     args, unknown = parser.parse_known_args()
 
-    if args.debug:
-        logger.setLevel(logging.DEBUG)
-        # 'SttreamHandler', in order of appearance.
-        stream_handler = logger.handlers[0]
-        stream_handler.setLevel(logging.DEBUG)
+    logger.info("Start.")
+    # Logger not completely set up, yet.
+    # Send to 'syslog' as well.
+    syslog.syslog("Start.")
 
-        logger.debug("Show DEBUG information.")
+    log_path = os.path.expanduser(args.log_path)
+    log_file = os.path.join(log_path, "aws_mail.log")
+    if not os.path.exists(log_path) or not os.path.isdir(log_path):
+        logger.error(f"Cannot find log path: '{log_path}'.")
+        # Logger not completely set up, yet.
+        # Send to 'syslog' as well.
+        syslog.syslog(syslog.LOG_ERR, f"Cannot find log path: '{log_path}'.")
+        return 1
 
-    if unknown and args.debug:
+    file_handler = TimedRotatingFileHandler(
+        log_file,
+        when="midnight",
+        backupCount=5,
+        utc=True,
+    )
+    file_handler.setFormatter(logger_formatter)
+    file_handler.setLevel(LOG_LEVEL_DEFAULT)
+
+    logger.addHandler(file_handler)
+
+    event_logger = logging.getLogger("EventHooks")
+    event_logger.setLevel(LOG_LEVEL_DEFAULT)
+    event_logger.addHandler(console_handler)
+    event_logger.addHandler(file_handler)
+
+    config_file = os.path.expanduser(args.config)
+    if not os.path.exists(config_file):
+        logger.error(f"Cannot find config file: '{config_file}'.")
+        return 1
+
+    config = load_config(config_file)
+
+    log_level_ = args.log_level
+
+    if log_level_:
+        log_level = LOG_LEVELS[log_level_]
+        logger.setLevel(log_level)
+        event_logger.setLevel(log_level)
+        # Stream handler, in order of appearance.
+        _console_handler = logger.handlers[0]
+        _console_handler.setLevel(log_level)
+        # File handler, in order of appearance.
+        _file_handler = logger.handlers[1]
+        _file_handler.setLevel(log_level)
+
+    logger.info(f"Using config file: '{config_file}'")
+
+    if unknown:
         logger.debug(f"Unprocessed arguments: '{unknown}'.")
 
     os.environ["AWS_DEFAULT_REGION"] = args.region
-
-    # Resolve possible symlink to config file.
-    config_file = os.path.expanduser(args.config)
-
-    if not os.path.exists(config_file):
-        logger.error(f"Cannot find config file '{config_file}'.")
-        return 1
-
-    logger.info(f"Using config file: '{config_file}'")
-    config = load_config(config_file)
 
     events = []
     events_config = config.get("events", {})
@@ -151,12 +206,15 @@ def main():  # noqa: C901
                         "logwatch"
                     ):
                         found_tool_log = True
+                        logger.info("Found 'logwatch' logs.")
                         coming_in = []
                     elif line_.lower().startswith("unattended upgrade result:"):
                         found_tool_log = True
+                        logger.info("Found 'unattended-upgrade' logs.")
                         coming_in = []
                     elif line_.lower().startswith("x-cron-env:"):
                         found_tool_log = True
+                        logger.info("Found 'cron' logs.")
                         coming_in = []
                 coming_in.append(line)
 
@@ -164,6 +222,7 @@ def main():  # noqa: C901
         logger.info("Send mail.")
         for event in events:
             event.trigger(data=data)
+        logger.info("Done.")
     except Exception as e_general:  # pylint: disable=W0703
         logger.error(str(e_general))
         return 1

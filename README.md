@@ -2,13 +2,14 @@
 
 The tool is written to send everything piped into it from `stdin` as an email, considering the settings found in `config.yml`.
 
-As this client uses the `boto3` library to send emails through AWS SES, it can be used as replacement for `sendmail` or any other mailer client on AWS instances - I found it very hard to configure `postfix` and could not make it work at all.
+As this client uses the `boto3` library to send emails through AWS SES, it can be used as replacement for `sendmail` or any other mailer client on AWS instances - I could not make the `postfix` configuration work at all for that scenario.
+
 Please also see the below: *Configure tools relying on /usr/sbin/sendmail*.
 
 The AWS EC2 instance should have an instance role attached, which allows sending emails through AWS SES.
 
 By default it just sends everything from `stdin`.
-The tool will recognize certain tools' log structure and will leave everything not part of it. This works for:
+Also by default,The tool recognizes certain tools' log structure and will leave everything not part of it. This works for:
 * `logwatch`
 * `unattended-upgrade`
 * `cron`
@@ -45,6 +46,10 @@ venv/bin/pip install aws_mail
 Instaalled this way you will find an executable called `aws_mail`.
 Its location depends on the way you installed the tool - I recommend to work with absolute paths when referring to the `aws_mail` location.
 
+*_Note_*:
+* The default location for the configuration file is `/etc/aws_mail/config.yml`.
+* The default log path is `/var/log/aws_mail`.
+* Make sure those directories/files exist.
 
 ## Usage
 
@@ -53,15 +58,25 @@ In general `aws_mail` works like this:
     echo "Good day today." | venv/bin/aws_mail --region us-east-1
 ```
 
+The above reads the configuration from `/etc/aws_mail/config.yml` and logs into `/var/log/aws_mail/aws_mail.log`.
+
 ## Configuration
 
 | option | description | default | configuration options |
 |--------|-------------|---------|-----------------------|
+| `--log-path`  | Path to the log file directory. | `/var/log/aws_mail` | Absolute, relative path and/or symlink. |
 | `--config`  | Path to the configuration file. | `/etc/aws_mail/config.yml` | Absolute, relative path and/or symlink. |
 | `--region`  | AWS region to use. | `us-east-1` | Can also be set in the configuration file. |
 | `--default-subject`  | Forces subject to be loaded from the configuration file <\br> Otherwise considers a line starting with `Subject:`. | `False` (not set) | Default value is the name of the event in the configuration file. |
 | `--default-recipients`  | Forces recipients to be loaded from the configuration file <\br> Otherwise considers a line starting with `To:`. | `False` (not set) | Default value is set in configuration file. |
-| `--debug`  | Enables debug output. | `False` (not set) |  |
+| `--log-level`  | Sets log level. | `ERROR` | `log_level` as `str`. |
+
+Examples:
+* Set a different log level:
+    ```bash
+        echo "Some message." | venv/bin/aws_mail --log-level INFO
+    ```
+*
 
 ### Configuration file
 Email settings need to be configured in `config.yml`.
@@ -75,6 +90,7 @@ However, you can also give another configuration file location by passing:
 
 Example configuration file:
 ```
+log_level: "ERROR"
 events:
   example_mail_event_name:  # <-- Name of the event, used as default subject.
     enabled: true  # <-- Everything but 'true' disables this event.
@@ -85,6 +101,8 @@ events:
     recipients:  # <-- Change that if you like or configure the tool properly, see below.
       - "{{ recipient_address}}"
 ```
+
+If set, the cli option `--log-level` overwrites the configuration `log_level` read from the configuration file.
 
 ### Email subject
 If the tool should find a line starting with `subject:` (piped into it), this will be used as email subject.
@@ -162,7 +180,8 @@ Tools like:
     - `cron` will send out emails using `sendmail` in case of error logs in `/var/log/syslog` (`debian/Ubuntu`)/`/var/log/messages` (`AmazonLinux/RHEL/CentOS`).
     - `aws_mail` is configured to log `ERORR`s with imported modules only.
 
-I could not find a place to actually configure the `mailer` client, so the only option left is to symlink `/usr/bin/sendmail` to `aws_mail`:
+I could not find a place to actually configure the `mailer` client apart from changing the actual code.
+So the only option left is to symlink `/usr/bin/sendmail` to `venv/bin/aws_mail`:
 ```
 # Create symlink, remove existing file if necessary.
 sudo ln -s /complete/path/to/venv/bin/aws_mail /usr/sbin/sendmail
